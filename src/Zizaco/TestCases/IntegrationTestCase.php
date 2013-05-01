@@ -12,11 +12,18 @@ class IntegrationTestCase extends TestCase
 
     static protected $seleniumOptions = null;
 
+    static protected $serverOptions = null;
+
     public $browser;
 
     public static function setSeleniumOptions($options)
     {
         self::$seleniumOptions = $options;
+    }
+
+    public static function setServerOptions($options)
+    {
+        self::$serverOptions = $options;
     }
 
     public static function setUpBeforeClass()
@@ -190,6 +197,9 @@ class IntegrationTestCase extends TestCase
             return;
 
         $command = "php artisan serve --port 4443";
+        if ( isset(self::$serverOptions) ) {
+            $command .= " " . self::$serverOptions;
+        }
         static::execAsyncAndWaitFor($command, 'development server started');
 
         IntegrationTestCase::$serverLaunched = true;
@@ -213,7 +223,7 @@ class IntegrationTestCase extends TestCase
         exec($command.$force_async);
     }
 
-    private static function execAsyncAndWaitFor($command, $content, $timeout = 30)
+    public static function execAsyncAndWaitFor($command, $content, $timeout = 30)
     {
         $output_path = "/tmp/zizaco-".str_shuffle(MD5(microtime()));
         self::execAsync($command, $output_path);
