@@ -1,5 +1,5 @@
 {
-    "name": "zizaco/testcases-laravel",
+    "name": "chriscampbell/testcases-laravel",
     "description": "Some classes to help write tests for laravel 4 applications",
     "keywords": ["laravel","illuminate","test","tdd","testcase","phpunit"],
     "license": "MIT",
