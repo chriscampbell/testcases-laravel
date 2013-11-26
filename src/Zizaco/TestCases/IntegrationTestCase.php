@@ -4,213 +4,251 @@ use Config, App;
 
 class IntegrationTestCase extends TestCase
 {
-    static protected $seleniumLaunched = false;
+	static protected $seleniumLaunched = false;
 
-    static protected $serverLaunched = false;
+	static protected $serverLaunched = false;
 
-    static protected $loadedBrowser = null;
+	static protected $loadedBrowser = null;
 
-    public $browser;
+	static protected $seleniumOptions = null;
 
-    public static function setUpBeforeClass()
-    {
-        static::launchSelenium();
-        static::launchServer();
-    }
+	public $browser;
 
-    public static function tearDownAfterClass()
-    {
-        static::killServer();
-        if(IntegrationTestCase::$loadedBrowser)
-        {
-            IntegrationTestCase::$loadedBrowser->stop();
-            IntegrationTestCase::$loadedBrowser = null;
-        }
-    }
+	public static function setSeleniumOptions($options)
+	{
+		self::$seleniumOptions = $options;
+	}
 
-    public function setUp()
-    {
-        parent::setUp();
+	public static function setUpBeforeClass()
+	{
+		static::launchSelenium();
+		static::launchServer();
+	}
 
-        $this->startbrowser();
-    }
+	public static function tearDownAfterClass()
+	{
+		static::killServer();
+		if(IntegrationTestCase::$loadedBrowser)
+		{
+			IntegrationTestCase::$loadedBrowser->stop();
+			IntegrationTestCase::$loadedBrowser = null;
+		}
+	}
 
-    public function assertBodyHasText($needle)
-    {
-        $text = $this->browser->getBodyText();
+	public function setUp()
+	{
+		parent::setUp();
 
-        $needle = (array)$needle;
+		$this->startbrowser();
+	}
 
-        foreach ($needle as $singleNiddle) {
-            $this->assertContains($singleNiddle, $text, "Body text does not contain '$singleNiddle'");
-        }
-    }
+	public function assertBodyHasText($needle)
+	{
+		$text = $this->browser->getBodyText();
 
-    public function assertBodyHasNotText($needle)
-    {
-        $text = $this->browser->getBodyText();
+		$needle = (array)$needle;
 
-        $needle = (array)$needle;
+		foreach ($needle as $singleNiddle) {
+			$this->assertContains($singleNiddle, $text, "Body text does not contain '$singleNiddle'");
+		}
+	}
 
-        foreach ($needle as $singleNiddle) {
-            $this->assertNotContains($singleNiddle, $text, "Body text does not contain '$singleNiddle'");
-        }
-    }
+	public function assertBodyHasNotText($needle)
+	{
+		$text = $this->browser->getBodyText();
 
-    public function assertElementHasText($locator, $needle)
-    {
-        $text = $this->browser->getText($locator);
+		$needle = (array)$needle;
 
-        $needle = (array)$needle;
+		foreach ($needle as $singleNiddle) {
+			$this->assertNotContains($singleNiddle, $text, "Body text does not contain '$singleNiddle'");
+		}
+	}
 
-        foreach ($needle as $singleNiddle) {
-            $this->assertContains($singleNiddle, $text, "Body text does not contain '$singleNiddle'");
-        }
-    }
+	public function assertElementHasText($locator, $needle)
+	{
+		$text = $this->browser->getText($locator);
 
-    public function assertElementHasNotText($locator, $needle)
-    {
-        $text = $this->browser->getText($locator);
+		$needle = (array)$needle;
 
-        $needle = (array)$needle;
+		foreach ($needle as $singleNiddle) {
+			$this->assertContains($singleNiddle, $text, "Body text does not contain '$singleNiddle'");
+		}
+	}
 
-        foreach ($needle as $singleNiddle) {
-            $this->assertNotContains($singleNiddle, $text, "Given element do contain '$singleNiddle' but it shoudn't");
-        }
-    }
+	public function assertElementHasNotText($locator, $needle)
+	{
+		$text = $this->browser->getText($locator);
 
-    public function assertBodyHasHtml($needle)
-    {
-        $html = str_replace("\n", '', $this->browser->getHtmlSource());
+		$needle = (array)$needle;
 
-        $needle = (array)$needle;
+		foreach ($needle as $singleNiddle) {
+			$this->assertNotContains($singleNiddle, $text, "Given element do contain '$singleNiddle' but it shoudn't");
+		}
+	}
 
-        foreach ($needle as $singleNiddle) {
-            $this->assertContains($singleNiddle, $html, "Body html does not contain '$singleNiddle'");
-        }
-    }
+	public function assertBodyHasHtml($needle)
+	{
+		$html = str_replace("\n", '', $this->browser->getHtmlSource());
 
-    public function assertBodyHasNotHtml($needle)
-    {
-        $html = str_replace("\n", '', $this->browser->getHtmlSource());
+		$needle = (array)$needle;
 
-        $needle = (array)$needle;
+		foreach ($needle as $singleNiddle) {
+			$this->assertContains($singleNiddle, $html, "Body html does not contain '$singleNiddle'");
+		}
+	}
 
-        foreach ($needle as $singleNiddle) {
-            $this->assertNotContains($singleNiddle, $html, "Body html does not contain '$singleNiddle'");
-        }
-    }
+	public function assertBodyHasNotHtml($needle)
+	{
+		$html = str_replace("\n", '', $this->browser->getHtmlSource());
 
-    public function assertLocation($location)
-    {
-        $current_location = substr($this->browser->getLocation(), strlen($location)*-1);
-        $pattern = '/^(http:)?\/\/(localhost)(:)?\d*(.*)/';
+		$needle = (array)$needle;
 
-        preg_match($pattern, $current_location, $current_matches);
-        $current_location = (isset($current_matches[4])) ? $current_matches[4] : $current_location;
+		foreach ($needle as $singleNiddle) {
+			$this->assertNotContains($singleNiddle, $html, "Body html does not contain '$singleNiddle'");
+		}
+	}
 
-        preg_match($pattern, $location, $shouldbe_matches);
-        $current_location = (isset($shouldbe_matches[4])) ? $shouldbe_matches[4] : $location;
+	public function assertLocation($location)
+	{
+		$current_location = substr($this->browser->getLocation(), strlen($location)*-1);
+		$pattern = '/^(http:)?\/\/(' . Config::get('testcases-laravel.server.host') . ')(:)?\d*(.*)/';
 
-        $this->assertEquals($current_location, $current_location, "The current location ($current_location) is not '$location'");
-    }
+		preg_match($pattern, $current_location, $current_matches);
+		$current_location = (isset($current_matches[4])) ? $current_matches[4] : $current_location;
 
-    protected function startBrowser()
-    {
-        // Set the Application URL containing the port of the test server
-        Config::set(
-            'app.url',
-            Config::get('app.url').':4443'
-        );
-        App::setRequestForConsoleEnvironment(); // This is a must
+		preg_match($pattern, $location, $shouldbe_matches);
+		$current_location = (isset($shouldbe_matches[4])) ? $shouldbe_matches[4] : $location;
 
-        if(! IntegrationTestCase::$loadedBrowser)
-        {
-            $client  = new \Selenium\Client('localhost', 4444);
-            $this->browser = $client->getBrowser('http://localhost:4443');
-            $this->browser->start();
-            $this->browser->windowMaximize();
+		$this->assertEquals($current_location, $current_location, "The current location ($current_location) is not '$location'");
+	}
 
-            IntegrationTestCase::$loadedBrowser = $this->browser;
-        }
-        else
-        {
-            $this->browser = IntegrationTestCase::$loadedBrowser;
-            $this->browser->open('/');
-        }
-        
-    }
+	protected function startBrowser()
+	{
+		// Set the Application URL containing the port of the test server
+		Config::set(
+			'app.url',
+			Config::get('app.url').':' . Config::get('testcases-laravel.server.port')
+		);
+	
+		App::setRequestForConsoleEnvironment(); // This is a must
 
-    protected static function launchSelenium()
-    {
-        if(IntegrationTestCase::$seleniumLaunched)
-            return;
+		if(! IntegrationTestCase::$loadedBrowser)
+		{
+			$client  = new \Selenium\Client(Config::get('testcases-laravel.selenium.host'), Config::get('testcases-laravel.selenium.port'));
+			$this->browser = $client->getBrowser(Config::get('app.url'));
+			$this->browser->start();
+			$this->browser->windowMaximize();
 
-        if(@fsockopen('localhost', 4444) == false)
-        {
-            $seleniumFound = false;
-            $seleniumDir = $_SERVER['HOME'].'/.selenium';
-            $files = scandir($seleniumDir);
+			IntegrationTestCase::$loadedBrowser = $this->browser;
+		}
+		else
+		{
+			$this->browser = IntegrationTestCase::$loadedBrowser;
+			$this->browser->open('/');
+		}
+		
+	}
 
-            foreach ($files as $file) {
-                if(substr($file,-4) == '.jar')
-                {
-                    $command = "java -jar $seleniumDir/$file";
-                    static::execAsync($command);
-                    $seleniumFound = true;
-                    break;
-                }
-            }
+	protected static function launchSelenium()
+	{
 
-            if(! $seleniumFound)
-                trigger_error(
-                    "Selenium not found. Please run the selenium server (in port 4444) or place the selenium ".
-                    ".jar file in the '.selenium' directory within your home directory. For example: ".
-                    "'~/.selenium/anySeleniumName-ver0.jar'"
-                );
-        }
+		if(IntegrationTestCase::$seleniumLaunched)
+			return;
+		$socket = @fsockopen(Config::get('testcases-laravel.selenium.host'), Config::get('testcases-laravel.selenium.port'));
+		if($socket == false)
+		{
+			$seleniumFound = false;
+			$seleniumDir = $_SERVER['HOME'].'/.selenium';
+			$files = scandir($seleniumDir);
 
-        IntegrationTestCase::$seleniumLaunched = true;
-    }
+			foreach ($files as $file) {
+				if(substr($file,-4) == '.jar')
+				{
+					$command = "java -jar $seleniumDir/$file";
+					if ( self::$seleniumOptions ) {
+						$command .= " " . self::$seleniumOptions;
+					}
+					static::execAsyncAndWaitFor($command, 'org.openqa.jetty.jetty.Server');
+					$seleniumFound = true;
+					break;
+				}
+			}
 
-    protected static function launchServer()
-    {
-        if(IntegrationTestCase::$serverLaunched)
-            return;
+			if(! $seleniumFound)
+				trigger_error(
+					"Selenium not found. Please run the selenium server (in port ".Config::get('testcases-laravel.server.port').") or place the selenium ".
+					".jar file in the '.selenium' directory within your home directory. For example: ".
+					"'~/.selenium/anySeleniumName-ver0.jar'"
+				);
+		}
 
-        $command = "php artisan serve --port 4443";
-        static::execAsync($command);
+		IntegrationTestCase::$seleniumLaunched = true;
+	}
 
-        IntegrationTestCase::$serverLaunched = true;
-    }
+	protected static function launchServer()
+	{
+		if(IntegrationTestCase::$serverLaunched)
+			return;
+		
+		$command =  "php artisan serve --host " . Config::get('testcases-laravel.server.host') . " --port " . Config::get('testcases-laravel.server.port');
 
-    protected static function killSelenium()
-    {
-        static::killProcessByPort('4444');
-        IntegrationTestCase::$seleniumLaunched = false;
-    }
+		static::execAsyncAndWaitFor($command, 'development server started');
+	   
+		IntegrationTestCase::$serverLaunched = true;
+	}
 
-    protected static function killServer()
-    {
-        static::killProcessByPort('4443');
-        IntegrationTestCase::$serverLaunched = false;
-    }
+	protected static function killSelenium()
+	{
+		static::killProcessByPort(Config::get('testcases-laravel.selenium.port'));
+		IntegrationTestCase::$seleniumLaunched = false;
+	}
 
-    private static function execAsync($command)
-    {
-        $force_async = " >/dev/null 2>&1 &";
-        exec($command.$force_async);
-    }
+	protected static function killServer()
+	{
+		static::killProcessByPort(Config::get('testcases-laravel.server.port'));
+		IntegrationTestCase::$serverLaunched = false;
+	}
 
-    private static function killProcessByPort($port)
-    {
-        $processInfo = exec("lsof -i :$port");
-        preg_match('/^\S+\s*(\d+)/', $processInfo, $matches);
+	private static function execAsync($command, $output_path = '/dev/null')
+	{
+		$force_async = " > $output_path 2>&1 &";
+		exec($command.$force_async);
+	}
 
-        if(isset($matches[1]))
-        {
-            $pid = $matches[1];
-            exec("kill $pid");
-        }
-    }
+	private static function execAsyncAndWaitFor($command, $content, $timeout = 30)
+	{
+		$output_path = "/tmp/zizaco-".str_shuffle(MD5(microtime()));
+		error_log($output_path);
+		self::execAsync($command, $output_path);
+		self::waitForOutput($output_path, $content, $timeout);
+	}
+	private static function waitForOutput($file, $output) {
+		$found = FALSE;
+		$max_tries = 30;
+		$num_tries = 0;
+		while ( !$found ) {
+			$contents = file_get_contents($file);
+			// var_dump($contents);
+			if ( strstr($contents, $output) ) {
+				$found = TRUE;
+			} else {
+				if ( ++$num_tries > $max_tries ) {
+					throw new \Exception("Failed to find $output in $file");
+				}
+				sleep(1);
+			}
+		}
+	}
+
+	private static function killProcessByPort($port)
+	{
+		$processInfo = exec("lsof -i :$port");
+		preg_match('/^\S+\s*(\d+)/', $processInfo, $matches);
+
+		if(isset($matches[1]))
+		{
+			$pid = $matches[1];
+			exec("kill $pid");
+		}
+	}
 }
